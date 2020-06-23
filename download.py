@@ -10,6 +10,19 @@ DOWNLOAD_DIRECTORY = Path("./downloads/")
 
 URL = str(input("Enter KissManga URL: "))
 
+CHAPTER_NUMBERS = str(input("Enter chapters: "))
+
+# if chapter numbers are given, convert those to float
+if (CHAPTER_NUMBERS != "*") and ("-" not in CHAPTER_NUMBERS):
+    CHAPTER_NUMBERS = [float(i) for i in CHAPTER_NUMBERS.split(",")]
+
+# when range is given
+elif ("-" in CHAPTER_NUMBERS):
+    chapters = CHAPTER_NUMBERS.split("-")
+    start_chapter = float(chapters[0])
+    end_chapter = float(chapters[1])
+    CHAPTER_NUMBERS = [start_chapter, "-", end_chapter]
+
 response = requests.get(URL)
 soup = BeautifulSoup(response.text, "html.parser")
 
@@ -28,8 +41,19 @@ chapters = {}
 for a in chapters_html:
     chapter_number = float(a["href"].split("/")[-1].split("_")[-1])
     chapter_url = "https://kissmanga.org/" + a["href"]
-    chapters[chapter_number] = chapter_url
 
+    # only save given chapter numbers
+    if (CHAPTER_NUMBERS != "*") and ("-" not in CHAPTER_NUMBERS):
+        if chapter_number not in CHAPTER_NUMBERS:
+            continue
+
+    # when chapter range is given
+    elif("-" in CHAPTER_NUMBERS):
+        if (chapter_number < CHAPTER_NUMBERS[0]) or (chapter_number > CHAPTER_NUMBERS[2]):
+            continue
+
+    # save chapter url
+    chapters[chapter_number] = chapter_url
 
 # sort chapter list
 chapters = dict(sorted(chapters.items()))
